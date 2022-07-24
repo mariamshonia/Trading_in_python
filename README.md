@@ -1,2 +1,2 @@
-# Trading_in_python
+# Trading-in-python
 Introduction to Trading in python
