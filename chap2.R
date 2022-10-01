@@ -1,0 +1,243 @@
+# Set the working directory
+
+# Go to "Session" -> 
+#    "Set Working Directory" -> 
+#    "To Source File Location"
+
+# Loading the data
+
+# EITHER
+
+food = read.csv("E:/clef/data4/csv/food.csv", 
+                header = TRUE)
+
+# OR
+
+# use "Import Dataset" in the top right Environment Pane
+
+attach(food)
+
+# 2.3 Quick table of summary statistics
+
+if (!require(pastecs)){
+    install.packages("pastecs")
+    library(pastecs)
+}
+options(scipen = 100)
+options(digits = 5)
+stat.desc(cbind(income, food_exp))
+
+# 2.3 Plot of food expenditure vs. income
+
+plot(income, food_exp,
+     col = "dimgrey", 
+     ylim = c(0, max(food_exp)),
+     xlim = c(0, max(income)),
+     xlab = "weekly income in $100",
+     ylab = "weekly food expenditure in $",
+     main = "food data",
+     lwd = 2,
+     type = "p")
+
+# 2.3.2 Estimating the food expenditure function by LS
+
+lm.food = lm(food_exp ~ income, data = food)
+names(lm.food)
+
+summary.lm.food = summary(lm.food)
+names(summary.lm.food)
+
+summary.lm.food
+
+# 2.3.2 LS fit plot with data
+
+b1 = coef(lm.food)[1]
+b2 = coef(lm.food)[2]
+plot(income, food_exp,
+     col = "dimgrey", 
+     ylim = c(0, max(food_exp)),
+     xlim = c(0, max(income)),
+     xlab = "weekly income in $100",
+     ylab = "weekly food expenditure in $",
+     main = "Data and LS regression line, linear model",
+     lwd = 2,
+     type = "p")
+abline(b1, b2, col = "blue", lwd = 2)
+abline(lm.food, col = "blue", lwd = 2)
+
+# 2.3.3a Computing elasticities
+
+food_exp.hat = lm.food$fitted.values
+
+## 2.3.3a Elasticity at the means
+
+ehat.1 = b2*mean(income)/mean(food_exp.hat)
+ehat.1
+
+## 2.3.3a Mean elasticity
+
+ehat.2 = mean(b2*income/food_exp.hat)
+ehat.2
+
+# 2.3.3b Prediction
+
+## 2.3.3b Straightforward
+
+food_exp.hat.20 = b1 + b2*20
+food_exp.hat.20
+
+## 2.3.3b Using predict
+
+income.try = data.frame(income = 20)
+food_exp.try = predict(lm.food, newdata = income.try)
+names(food_exp.try) = "income = 2000$"
+food_exp.try
+
+# 2.7.1 Estimating variances, covariances and 
+# standard errors
+
+var.matrix = vcov(lm.food)
+var.matrix
+
+var.b1 = var.matrix[1, 1]
+var.b2 = var.matrix[2, 2]
+se.b1 = sqrt(var.b1)
+se.b1
+se.b2 = sqrt(var.b2)
+se.b2
+
+summary.lm.food
+
+# 2.8.2  Estimating a quadratic model
+
+# EITHER
+
+br = read.csv("E:/clef/data/csv/br.csv", 
+              header = TRUE)
+
+# OR
+
+# use "Import Dataset" in the top right Environment Pane
+
+attach(br)
+
+## 2.8.2 Pre-generating the transformed variable
+
+sqft2 = sqft^2
+lm.br.quad = lm(price ~ sqft2, data = br)
+summary(lm.br.quad)
+
+## 2.8.2 Generating the transformed variable on-the-fly
+
+lm.br.quad = lm(price ~ I(sqft^2), data = br)
+summary(lm.br.quad)
+
+## 2.8.2 Computing slopes at different SQFT values
+
+a1 = coef(lm.br.quad)[1]
+a2 = coef(lm.br.quad)[2]
+price.hat = lm.br.quad$fitted.values
+sqft.try = c(2000, 4000, 6000)
+estimated.slopes = 2*a2*sqft.try
+estimated.slopes
+
+estimated.prices = a1+a2*sqft.try^2
+estimated.elasticities = 2*a2*sqft.try^2/estimated.prices
+estimated.elasticities
+
+# 2.8.2 Plotting the fit of the quadratic model
+
+plot(sqft, price,
+     col = "dimgrey", 
+     ylim = c(0, max(price)),
+     xlim = c(0, max(sqft)),
+     xlab = "surface area (square feet)",
+     ylab = "sale price ($)",
+     main = "Data and fitted regression line, 
+     quadratic model",
+     type = "p")
+curve(a1+a2*x^2, col = "blue", lwd = 2, add = TRUE)
+
+# 2.8.4 Histogram of PRICE
+
+par(mfrow = c(1, 2))
+hist(price, 
+     freq = TRUE, col = "red", 
+     border = "black", nclass = 30, 
+     main = "PRICE", xlab = "") 
+lprice = log(price)
+hist(lprice, 
+     freq = TRUE, col = "red", 
+     border = "black", nclass = 30, 
+     main = "log(PRICE)", xlab = "") 
+
+# 2.8.4 Estimating a loglinear model
+
+lm.br.loglin = lm(lprice ~ sqft, data = br)
+summary(lm.br.loglin)
+
+## 2.8.4 Computing slopes at different SQFT values
+
+c1 = coef(lm.br.loglin)[1]
+c2 = coef(lm.br.loglin)[2]
+lprice.hat = lm.br.loglin$fitted.values
+price.hat = exp(lprice.hat)
+
+price.try = c(100000, 500000)
+estimated.slopes = c2*price.try
+estimated.slopes
+
+sqft.try = c(2000, 4000)
+estimated.elasticities = c2*sqft.try
+estimated.elasticities
+
+# 2.8.4 Plotting the fit of the loglinear model
+
+par(mfrow = c(1, 1))
+plot(sqft, price,
+     col = "dimgrey", 
+     ylim = c(0, max(price)),
+     xlim = c(0, max(sqft)),
+     xlab = "surface area (square feet)",
+     ylab = "sale price ($)",
+     main = "Data and fitted regression line, 
+     loglinear model",
+     type = "p")
+curve(exp(c1+c2*x), col = "blue", lwd = 2, add = TRUE)
+
+# 2.9 Histogram of PRICE by neighborhood
+
+# EITHER
+
+utown = read.csv("E:/clef/data/csv/utown.csv", 
+                header = TRUE)
+
+# OR
+
+# use "Import Dataset" in the top right Environment Pane
+
+attach(utown)
+
+price.1 = price[utown$utown == 1]
+price.0 = price[utown$utown == 0]
+
+par(mfrow = c(1, 2))
+hist(price.1, 
+     freq = TRUE, col = "red", 
+     border = "black", nclass = 30, 
+     main = "UTOWN = 1", xlab = "") 
+hist(price.0, 
+     freq = TRUE, col = "red", 
+     border = "black", nclass = 30, 
+     main = "UTOWN = 0", xlab = "") 
+
+# 2.9 Estimating the linear regression of PRICE on UTOWN
+
+lm.utown = lm(price ~ utown, data = utown)
+summary(lm.utown)
+
+utown.try = data.frame(utown = c(0, 1))
+price.try = predict(lm.utown, newdata = utown.try)
+names(price.try) = c("utown = 0", "utown = 1")
+price.try
+par(mfrow = c(1, 1))
